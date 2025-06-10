@@ -91,8 +91,8 @@ pop_p <- ggplot(density_dt[from != max(from)]) + aes(from, weight) +
   theme_minimal() + theme(panel.spacing.x = unit(1.5, "line"))
 
 ifr_p <- ggplot(sub_plot_dt[x <= density_dt[, max(from)-1]]) + aes(x = x, color = method, y = value) +
-  geom_line(data = \(dt) dt[method == "f_val"], lwd = 0.8, lty = "dotted") +
-  geom_step(data = \(dt) dt[method != "f_val"]) +
+  geom_line(data = function(dt) dt[method == "f_val"], lwd = 0.8, lty = "dotted") +
+  geom_step(data = function(dt) dt[method != "f_val"]) +
   scale_color_discrete(
     NULL,
     breaks = sub_plot_dt[, value[.N], by = method][order(-V1), method],
