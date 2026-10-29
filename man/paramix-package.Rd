@@ -6,12 +6,16 @@
 \alias{paramix-package}
 \title{paramix: Aggregate and Disaggregate Continuous Parameters for Compartmental Models}
 \description{
-A convenient framework for aggregating and disaggregating continuously varying parameters (for example, case fatality ratio, with age) for proper parametrization of lower-resolution compartmental models (for example, with broad age categories) and subsequent upscaling of model outputs to high resolution (for example, as needed when calculating age-sensitive measures like years-life-lost).
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+A convenient framework for aggregating and disaggregating continuously varying parameters (for example, case fatality ratio, with age) for proper parametrization of lower-resolution compartmental models (for example, with broad age categories) and subsequent upscaling of model outputs to high resolution (for example, as needed when calculating age-sensitive measures like years-life-lost). Methods and application to calculating years of life lost are described in Goodfellow et al. (2025) \doi{10.1371/journal.pcbi.1013420}.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://cmmid.github.io/paramix/}
+  \item \url{https://accidda.github.io/paramix/}
+  \item \doi{10.1371/journal.pcbi.1013420}
+  \item Report bugs at \url{https://github.com/accidda/paramix/issues}
 }
 
 }
@@ -20,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Carl Pearson \email{carl.ab.pearson@gmail.com} (\href{https://orcid.org/0000-0003-0701-7860}{ORCID})
   \item Simon Proctor \email{simon.procter@lshtm.ac.uk} (\href{https://orcid.org/0000-0002-0380-1503}{ORCID})
   \item Lucy Goodfellow \email{lucy.goodfellow@lshtm.ac.uk} (\href{https://orcid.org/0009-0004-0434-5863}{ORCID})
 }

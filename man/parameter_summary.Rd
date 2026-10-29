@@ -65,10 +65,10 @@ model_partition <- c(0, 5, 20, 65, 101)
 ps_dt <- parameter_summary(f_param, densities, model_partition)
 ps_dt
 
-\dontshow{if (require(ggplot2)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (require(ggplot2)) withAutoprint(\{ # examplesIf}
 ggplot(ps_dt) + aes(x, y = value, color = method) +
-  geom_line(data = function(dt) subset(dt, method == "f_val")) +
-  geom_step(data = function(dt) subset(dt, method != "f_val")) +
+  geom_line(data = \(dt) subset(dt, method == "f_val")) +
+  geom_step(data = \(dt) subset(dt, method != "f_val")) +
   theme_bw() + theme(
     legend.position = "inside", legend.position.inside = c(0.05, 0.95),
     legend.justification = c(0, 1)

@@ -33,7 +33,7 @@ across multiple simulation outputs or at multiple time points), that has to
 be done by external grouping then calling \code{distill()}.
 }
 \examples{
-\dontshow{if (require(data.table)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (require(data.table)) withAutoprint(\{ # examplesIf}
 
 ifr_levin <- function(age_in_years) {
   (10^(-3.27 + 0.0524 * age_in_years))/100

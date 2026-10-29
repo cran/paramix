@@ -41,7 +41,7 @@ Implements several approaches to imputing higher resolution outcomes, then
 tables them up for convenient plotting.
 }
 \examples{
-\dontshow{if (require(data.table)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (require(data.table)) withAutoprint(\{ # examplesIf}
 
 library(data.table)
 f_param <- function(age_in_years) {

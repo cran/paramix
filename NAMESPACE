@@ -7,17 +7,23 @@ export(distill_summary)
 export(interpolate_opts)
 export(parameter_summary)
 import(data.table)
-importFrom(data.table,":=")
-importFrom(data.table,.BY)
-importFrom(data.table,.EACHI)
-importFrom(data.table,.GRP)
-importFrom(data.table,.I)
-importFrom(data.table,.N)
-importFrom(data.table,.NGRP)
-importFrom(data.table,.SD)
-importFrom(data.table,data.table)
-importFrom(data.table,melt.data.table)
-importFrom(stats,integrate)
-importFrom(stats,weighted.mean)
-importFrom(utils,head)
-importFrom(utils,tail)
+importFrom(data.table,
+  ":=",
+  .BY,
+  .EACHI,
+  .GRP,
+  .I,
+  .N,
+  .NGRP,
+  .SD,
+  data.table,
+  melt.data.table
+)
+importFrom(stats,
+  integrate,
+  weighted.mean
+)
+importFrom(utils,
+  head,
+  tail
+)

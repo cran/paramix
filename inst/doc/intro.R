@@ -1,10 +1,45 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.retina = 2,
+  dpi = 300,
+  out.width = "100%",
+  dev.args = list(bg = "white")
 )
 
-## ----setup, echo = FALSE------------------------------------------------------
+## ----setup, echo = FALSE, message = FALSE, warning = FALSE--------------------
+if (isNamespaceLoaded("thematic")) {
+  getFromNamespace("thematic_off", "thematic")()
+}
+
+# Define a knitr hook to fold source code into a <details> block below the plot
+local({
+  hook_source <- knitr::knit_hooks$get("source")
+  knitr::knit_hooks$set(source = function(x, options) {
+    res <- hook_source(x, options)
+    if (isTRUE(options$fold) || !is.null(options$code_summary)) {
+      label <- options$code_summary
+      if (is.null(label)) label <- "Show code"
+      sprintf("\n<details><summary><b>%s</b></summary>\n\n%s\n</details>\n", label, res)
+    } else {
+      res
+    }
+  })
+
+  hook_chunk <- knitr::knit_hooks$get("chunk")
+  knitr::knit_hooks$set(chunk = function(x, options) {
+    res <- hook_chunk(x, options)
+    if (isTRUE(options$fold)) {
+      sprintf("\n<div class=\"chunk-plot-first\">\n%s\n</div>\n", res)
+    } else {
+      res
+    }
+  })
+})
+
 suppressPackageStartupMessages({
   library(paramix)
   library(data.table)
@@ -12,6 +47,24 @@ suppressPackageStartupMessages({
   library(patchwork)
   library(wpp2019)
 })
+
+# Always enforce white background and black text on plots
+ggplot2::theme_set(
+  ggplot2::theme_bw() +
+    ggplot2::theme(
+      plot.background = ggplot2::element_rect(fill = "white", colour = NA),
+      panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+      legend.background = ggplot2::element_rect(fill = "white", colour = NA),
+      legend.box.background = ggplot2::element_blank(),
+      text = ggplot2::element_text(colour = "black"),
+      axis.text = ggplot2::element_text(colour = "black"),
+      axis.title = ggplot2::element_text(colour = "black"),
+      plot.title = ggplot2::element_text(colour = "black"),
+      plot.subtitle = ggplot2::element_text(colour = "black"),
+      strip.text = ggplot2::element_text(colour = "black"),
+      strip.background = ggplot2::element_rect(fill = "grey90", colour = "grey20")
+    )
+)
 
 pretty_kable <- function(dt, lims, var) {
   tbl2 <- as.data.frame(
@@ -26,18 +79,18 @@ pretty_kable <- function(dt, lims, var) {
 
 ## ----ifrfdef------------------------------------------------------------------
 ifr_levin <- function(age_in_years) {
-  (10^(-3.27 + 0.0524 * age_in_years))/100
+  (10^(-3.27 + 0.0524 * age_in_years)) / 100
 }
 
-## ----echo=FALSE, out.width = "100%", dpi = 600, fig.width = 8, fig.height = 3----
+## ----ifr-curve, fold = TRUE, code_summary = "Show plot code", fig.width = 8, fig.height = 3----
 ggplot(
   data.frame(x = 0:100, y = ifr_levin(0:100))
 ) + aes(x, y) +
-  geom_line() + theme_minimal() +
+  geom_line() +
   scale_y_log10("Infection-fatality ratio") +
   labs(x = "Age")
 
-## ----create_pops, cache = TRUE------------------------------------------------
+## ----create_pops--------------------------------------------------------------
 # our model age group cut points
 model_agelimits <- c(0, 5, 20, 65, 101)
 # get select data from World Population Prospects estimates
@@ -49,13 +102,13 @@ pop_dt <- as.data.table(popF)[,
 ][
   as.data.table(popM), on = c("name", "age"),
   .(name, age, popF, popM = `2020`)
-][, age := as.integer(gsub("^(\\d+)[-+].*$","\\1", age)) ][
+][, age := as.integer(gsub("^(\\d+)[-+].*$", "\\1", age))][
   name %like% "Afghanistan|United Kingdom"
 ]
 
 density_dt <- pop_dt[,
   .(
-    from = c(age, max(age)+1),
+    from = c(age, max(age) + 1),
     weight = c(popF + popM, 0)
   ), by = name
 ]
@@ -63,14 +116,14 @@ density_dt <- pop_dt[,
 rm(popF)
 rm(popM)
 
-## ----ifrplotsetup, cache=TRUE-------------------------------------------------
+## ----ifrplotsetup-------------------------------------------------------------
 plot_dt <- density_dt[, { # compute parameters for each country of interest
   paramix::parameter_summary(
     f_param = ifr_levin, f_pop = .SD, model_agelimits
   )
 }, by = name]
 
-## ----ifrfig, echo = FALSE, cache = TRUE, out.width = "100%", dpi = 600, fig.width = 8, fig.height = 5----
+## ----ifrfig, fold = TRUE, code_summary = "Show plot code", fig.width = 8, fig.height = 5----
 sub_plot_dt <- plot_dt[
   name == "Afghanistan" | method == "wm_f"
 ][,
@@ -88,11 +141,12 @@ pop_p <- ggplot(density_dt[from != max(from)]) + aes(from, weight) +
   facet_grid(cols = vars(name)) +
   scale_x_continuous("Age", expand = expansion()) +
   scale_y_continuous("Population (thousands)") +
-  theme_minimal() + theme(panel.spacing.x = unit(1.5, "line"))
+  theme(panel.spacing.x = unit(1.5, "line"))
 
-ifr_p <- ggplot(sub_plot_dt[x <= density_dt[, max(from)-1]]) + aes(x = x, color = method, y = value) +
-  geom_line(data = function(dt) dt[method == "f_val"], lwd = 0.8, lty = "dotted") +
-  geom_step(data = function(dt) dt[method != "f_val"]) +
+ifr_p <- ggplot(sub_plot_dt[x <= density_dt[, max(from) - 1]]) +
+  aes(x = x, color = method, y = value) +
+  geom_line(data = \(dt) dt[method == "f_val"], lwd = 0.8, lty = "dotted") +
+  geom_step(data = \(dt) dt[method != "f_val"]) +
   scale_color_discrete(
     NULL,
     breaks = sub_plot_dt[, value[.N], by = method][order(-V1), method],
@@ -104,7 +158,6 @@ ifr_p <- ggplot(sub_plot_dt[x <= density_dt[, max(from)-1]]) + aes(x = x, color 
   ) +
   scale_y_log10("Infection-fatality ratio", expand = expansion()) +
   scale_x_continuous("Age", breaks = 10 * (0:10), expand = expansion()) +
-  theme_minimal() +
   theme(
     legend.position = "inside", legend.position.inside = c(0.025, 1),
     legend.justification.inside = c(0, 1)
@@ -114,11 +167,17 @@ ifr_p <- ggplot(sub_plot_dt[x <= density_dt[, max(from)-1]]) + aes(x = x, color 
 
 ## ----params-------------------------------------------------------------------
 # setup the model to outcome mapping using `alembic`s
+out_partition <- function(from, max_limit) {
+  res <- seq(min(from), max(from), by = 5L)
+  res[length(res)] <- max_limit
+  res
+}
+
 mapping_dt <- density_dt[,
   paramix::alembic(
     f_param = ifr_levin, f_pop = .SD,
     model_partition = model_agelimits,
-    output_partition = { res <- seq(min(from), max(from), by = 5L); res[length(res)] <- tail(model_agelimits, 1); res } 
+    output_partition = out_partition(from, tail(model_agelimits, 1))
   ),
   by = name
 ]
@@ -153,7 +212,7 @@ distill_methods_dt <- model_deaths_dt[,
   by = name
 ]
 
-## ----alembicplot, echo = FALSE, warning = FALSE, cache = TRUE, out.width = "100%", fig.width = 8, fig.height = 5, , dpi = 600----
+## ----alembicplot, fold = TRUE, code_summary = "Show plot code", warning = FALSE, fig.width = 8, fig.height = 5----
 distill_labels <- c(
   f_mean = "Deaths at mean age",
   f_mid = "Deaths uniform across age group",
@@ -164,9 +223,11 @@ distill_labels <- c(
 ggplot(distill_methods_dt) + aes(x = partition, y = value, color = method) +
   facet_grid(. ~ name) +
   geom_point() +
-  theme_minimal() + theme(
-    legend.position = "inside", legend.position.inside = c(1, 0),
-    legend.justification.inside = c(1, 0), text = element_text(size = 10)
+  theme(
+    legend.position = "inside",
+    legend.position.inside = c(1, 0),
+    legend.justification.inside = c(1, 0),
+    text = element_text(size = 10)
   ) +
   scale_y_log10("Deaths (log 10 scale)") +
   scale_x_continuous("Age") +
@@ -176,10 +237,12 @@ ggplot(distill_methods_dt) + aes(x = partition, y = value, color = method) +
       "f_mid", "f_mean",
       "mean_f", "wm_f"
     ),
-    labels = function(b) { distill_labels[as.character(b)] }
+    labels = function(b) {
+      distill_labels[as.character(b)]
+    }
   )
 
-## ----figlex, echo = FALSE, cache = TRUE, out.width = "100%", fig.width = 8, fig.height = 3, dpi = 600----
+## ----figlex, fold = TRUE, code_summary = "Show plot code", fig.width = 8, fig.height = 3----
 data("mxF", package = "wpp2019")
 data("mxM", package = "wpp2019")
 life_expectancy_dt <- as.data.table(mxF)[,
@@ -189,12 +252,20 @@ life_expectancy_dt <- as.data.table(mxF)[,
   .(name, age, mxF, mxM = `2020-2025`)
 ][
   name %in% c("Afghanistan", "United Kingdom")
-][pop_dt, on = .(name, age), .(name, age, mx = (mxF*popF + mxM*popM)/(popF + popM))]
+][
+  pop_dt,
+  on = .(name, age),
+  .(name, age, mx = (mxF * popF + mxM * popM) / (popF + popM))
+]
 
 life_expectancy_dt[,
   ax := 0.5
 ][,
-  qx := fifelse(age == max(age), 1, c(diff(age), 0)*mx / (1 + c(diff(age), 0)*mx * (1 - ax)))
+  qx := fifelse(
+    age == max(age),
+    1,
+    c(diff(age), 0) * mx / (1 + c(diff(age), 0) * mx * (1 - ax))
+  )
 ]
 life_expectancy_dt[age == 0, lx := 1000]
 life_expectancy_dt[, lx := {
@@ -213,8 +284,9 @@ life_expectancy_dt[,
 life_expectancy_dt[, ex := rev(cumsum(rev(Lx) / 1000)), by = name]
 
 life_ex_interpolated_dt <- life_expectancy_dt[,
-  .(age = 0:100, ex = stats::approxfun(age, ex)(0:100))
-, by=name]
+  .(age = 0:100, ex = stats::approxfun(age, ex)(0:100)),
+  by = name
+]
 
 # because of the selected breakpoints, there are some half-ages, so will
 # linearly interpolate between the relevant ages
@@ -224,8 +296,12 @@ expander <- distill_methods_dt[, .(
   lower = floor(age), upper = ceiling(age), tar = age, index = seq_len(.N)
 ), by = name]
 
-lower_dt <- life_ex_interpolated_dt[expander, on = .(name, age = lower), .(name, index, age, ex)]
-upper_dt <- life_ex_interpolated_dt[expander, on = .(name, age = upper), .(name, index, age, ex)]
+lower_dt <- life_ex_interpolated_dt[
+  expander, on = .(name, age = lower), .(name, index, age, ex)
+]
+upper_dt <- life_ex_interpolated_dt[
+  expander, on = .(name, age = upper), .(name, index, age, ex)
+]
 
 expand_dt <- lower_dt[
   upper_dt, on = .(name, index)
@@ -241,22 +317,26 @@ lex_dt <- rbind(
 )
 
 yll_dt <- distill_methods_dt[
-  lex_dt, on = .(name, partition = age)
+  lex_dt, on = .(name, partition = age), nomatch = NULL
 ][, .(YLL = sum(value * ex)), by = .(name, method)]
 
 yllord <- yll_dt[name == "Afghanistan", method[order(YLL)]]
 
 ggplot(yll_dt) + aes(x = name, y = YLL / 1e4, fill = method) +
   geom_bar(position = "dodge", stat = "identity") +
-  theme_minimal() +
   theme(
-    legend.position = "inside", legend.position.inside = c(0.1, 0.9),
-    legend.justification.inside = c(0, 1), text = element_text(size = 8)
+    legend.position = "inside",
+    legend.position.inside = c(0.1, 0.9),
+    legend.justification.inside = c(0, 1),
+    text = element_text(size = 8)
   ) +
   scale_fill_brewer(
     "Method", palette = "Set1",
-    labels = function(b) { distill_labels[as.character(b)] }
-  ) + labs(
+    labels = function(b) {
+      distill_labels[as.character(b)]
+    }
+  ) +
+  labs(
     x = "Country",
     y = "YLLs per one million infections\n(10,000 person-years)"
   )

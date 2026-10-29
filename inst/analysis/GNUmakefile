@@ -29,7 +29,7 @@ RENV = .Rprofile
 
 # build renv/library & other renv infrastructure
 ${RENV}: install.R
-	 Rscript --vanilla $^
+	 Rscript $^
 
 clean:
 	rm -rf ${RENV}
@@ -103,7 +103,7 @@ ${UTIL}: scripts/fig_utilities.R | ${FIGDIR} ${RENV}
 #	$(call R)
 
 ${FIGDIR}/summary.%: scripts/fig_fullsummary.R ${UTIL} \
-$(call dat,population.rds lex.rds disease_pars.rda) ${OUTDIR}/incidence.rds
+$(call dat,population.rds disease_pars.rda) ${OUTDIR}/incidence.rds
 	$(call R)
 
 ${FIGDIR}/incidence.%: scripts/fig_incidence.R ${UTIL} ${OUTDIR}/incidence.rds

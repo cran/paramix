@@ -1,15 +1,18 @@
-
 require(data.table)
 require(paramix)
 require(socialmixr)
 
-.args <- if (interactive()) c(
-  file.path("input", "population.rds"),
-  file.path("input", "disease_pars.rda"),
-  "AFG",
-  "FLU",
-  file.path("input", "param_AFG_FLU.rda")
-) else commandArgs(trailingOnly = TRUE)
+.args <- if (interactive()) {
+  c(
+    file.path("input", "population.rds"),
+    file.path("input", "disease_pars.rda"),
+    "AFG",
+    "FLU",
+    file.path("input", "param_AFG_FLU.rda")
+  )
+} else {
+  commandArgs(trailingOnly = TRUE)
+}
 
 pop_dt <- readRDS(.args[1])
 load(.args[2]) # ifr_opts
@@ -22,13 +25,38 @@ f_ifr <- ifr_opts[[match.arg(.args[4], names(ifr_opts))]]
 sim_pars <- disease_pars[[match.arg(.args[4], names(ifr_opts))]]
 
 model_agelimits <- c(0, 5, 20, 65, 101)
+contact_agelimits <- head(model_agelimits, -1)
+
+bound_pop_dt <- pop_dt[, .(
+  from = c(from, max(from) + 1L),
+  weight = c(weight, 0)
+)]
+
+survey_pop_dt <- pop_dt[, .(
+  lower.age.limit = from,
+  lower_age_limit = from,
+  population = weight * 1e3
+)]
+
+cm_args <- list(
+  polymod,
+  symmetric = TRUE
+)
+
+if ("survey_pop" %in% names(formals(socialmixr::contact_matrix))) {
+  cm_args$survey_pop <- survey_pop_dt
+  cm_args$age_limits <- contact_agelimits
+  cm_args$missing_participant_age <- "remove"
+  cm_args$missing_contact_age <- "remove"
+} else {
+  cm_args$survey.pop <- survey_pop_dt
+  cm_args$age.limits <- contact_agelimits
+  cm_args$missing.participant.age <- "remove"
+  cm_args$missing.contact.age <- "remove"
+}
 
 # assume all age-contact patterns based off POLYMOD results
-cmij <- contact_matrix(
-  polymod, survey.pop = pop_dt[, .(lower.age.limit = from, population = weight*1e3) ],
-  age.limits = model_agelimits, missing.participant.age = "remove",
-  missing.contact.age = "remove", symmetric = TRUE
-)$matrix
+cmij <- do.call(socialmixr::contact_matrix, cm_args)$matrix
 
 # for checking a high resolution approximation;
 # assume contacts are uniformly distributed
@@ -39,16 +67,15 @@ cmij <- contact_matrix(
 widths <- diff(model_agelimits)
 cmijfull <- array(0, dim = c(sum(widths), sum(widths)))
 for (i in seq_along(widths)) {
-  newrow <- rep(cmij[i,], times = widths)
+  newrow <- rep(cmij[i, ], times = widths)
   for (j in model_agelimits[i]:(model_agelimits[i + 1] - 1)) {
-    cmijfull[j,] <- newrow
+    cmijfull[j, ] <- newrow
   }
 }
 
-bound_pop_dt <- pop_dt[, .(from = c(from, max(from) + 1L), weight = c(weight, 0))]
-
 mapping_dt <- alembic(
-  f_param = f_ifr, f_pop = bound_pop_dt,
+  f_param = f_ifr,
+  f_pop = bound_pop_dt,
   model_partition = model_agelimits,
   output_partition = bound_pop_dt[, seq(min(from), max(from))]
 )
@@ -56,14 +83,20 @@ mapping_dt <- alembic(
 # using `parameter_summary` instead of `blend`, because we want to compare to
 # the naive alternatives
 ifr_params <- parameter_summary(
-  f_param = f_ifr, f_pop = bound_pop_dt,
-  model_partition = model_agelimits, resolution = 102L
+  f_param = f_ifr,
+  f_pop = bound_pop_dt,
+  model_partition = model_agelimits,
+  resolution = 102L
 )
 
 ifr_params[, model_partition := model_agelimits[model_category]]
 
 save(
-  model_agelimits, ifr_params, mapping_dt, cmij, sim_pars, cmijfull,
+  model_agelimits,
+  ifr_params,
+  mapping_dt,
+  cmij,
+  sim_pars,
+  cmijfull,
   file = tail(.args, 1)
 )
-

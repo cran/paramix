@@ -1,7 +1,7 @@
 Package: paramix
 Title: Aggregate and Disaggregate Continuous Parameters for
         Compartmental Models
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     c(person("Carl", "Pearson", , "carl.ab.pearson@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0701-7860")),
@@ -14,22 +14,30 @@ Description: A convenient framework for aggregating and disaggregating continuou
     parametrization of lower-resolution compartmental models (for example, with
     broad age categories) and subsequent upscaling of model outputs to high resolution
     (for example, as needed when calculating age-sensitive measures like years-life-lost).
+    Methods and application to calculating years of life lost are described in
+    Goodfellow et al. (2025) <doi:10.1371/journal.pcbi.1013420>.
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.3.2
-Depends: R (>= 3.5.0)
-Suggests: lintr, knitr, rmarkdown, ggplot2, roxygen2, wpp2019, testthat
-        (>= 3.0.0), patchwork
+Language: en-US
+Depends: R (>= 4.1.0)
+Suggests: covr, devtools, ggplot2, knitr, lintr, patchwork, pkgdown,
+        pkgload, rmarkdown, roxygen2, roxyglobals, spelling, testthat
+        (>= 3.0.0), withr, wpp2019
 VignetteBuilder: knitr
 Imports: data.table
 Config/testthat/edition: 3
-URL: https://cmmid.github.io/paramix/
+URL: https://accidda.github.io/paramix/,
+        https://doi.org/10.1371/journal.pcbi.1013420
+BugReports: https://github.com/accidda/paramix/issues
+Config/roxyglobals/filename: globals.R
+Config/roxyglobals/unique: FALSE
+Config/roxygen2/version: 8.1.1
 NeedsCompilation: no
-Packaged: 2025-06-10 14:21:42 UTC; carl
+Packaged: 2026-10-29 02:27:34 UTC; runner
 Author: Carl Pearson [aut, cre] (ORCID:
     <https://orcid.org/0000-0003-0701-7860>),
   Simon Proctor [aut] (ORCID: <https://orcid.org/0000-0002-0380-1503>),
   Lucy Goodfellow [aut] (ORCID: <https://orcid.org/0009-0004-0434-5863>)
 Maintainer: Carl Pearson <carl.ab.pearson@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-06-10 14:50:02 UTC
+Date/Publication: 2026-10-29 08:50:17 UTC
